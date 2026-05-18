@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>RBX Archive • Traveler_Caelum's POV</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+<link rel="stylesheet" href="/css/rbx-archive-style.css">
+</head>
+<body>
+
+<!-- ═══ HERO with game-hero.png background ═══ -->
+<header class="hero">
+  <div class="hero-eyebrow">Traveler_Caelum's Archive</div>
+  <h1>My Roblox Game Selections</h1>
+  <p class="hero-sub">A curated archive by <strong>Traveler_Caelum</strong> — games chosen for creativity &amp; entertainment value.</p>
+</header>
+
+<div class="shell">
+
+  <!-- ═══ SIDEBAR ═══ -->
+  <aside class="sidebar" id="sidebar">
+    <button class="sidebar-toggle" id="sidebarToggle" aria-label="Toggle sidebar">
+      <svg class="sidebar-icon" role="img" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+        <path d="M18.926 23.998L0 18.892 5.075.002 24 5.108 18.926 23.998zM15.348 10.09l-5.282-1.453-1.414 5.273 5.282 1.453 1.414-5.273z"/>
+      </svg>
+      <span class="sidebar-toggle-text">Roblox Games</span>
+    </button>
+
+    <nav class="sidebar-nav">
+      <span class="nav-section-label">Browse</span>
+
+      <button class="nav-link active" data-panel="games" onclick="switchPanel('games',this)">
+        <i class="fas fa-gamepad"></i>
+        <span class="nav-link-text">Games</span>
+      </button>
+
+      <button class="nav-link" data-panel="about" onclick="switchPanel('about',this)">
+        <i class="fas fa-info-circle"></i>
+        <span class="nav-link-text">About</span>
+      </button>
+
+      <span class="nav-section-label filter-section-label" id="filterSectionLabel">Filter</span>
+
+      <div id="filterButtons">
+        <button class="nav-link" onclick="filterGenre('all')">
+          <i class="fas fa-border-all"></i>
+          <span class="nav-link-text">All Games</span>
+        </button>
+        <button class="nav-link" onclick="filterGenre('multiplayer')">
+          <i class="fas fa-users"></i>
+          <span class="nav-link-text">Multiplayer</span>
+        </button>
+        <button class="nav-link" onclick="filterGenre('adventure')">
+          <i class="fas fa-hat-wizard"></i>
+          <span class="nav-link-text">Adventure</span>
+        </button>
+        <button class="nav-link" onclick="filterGenre('horror')">
+          <i class="fas fa-ghost"></i>
+          <span class="nav-link-text">Horror / Thriller</span>
+        </button>
+        <button class="nav-link" onclick="filterGenre('creature')">
+          <i class="fas fa-dragon"></i>
+          <span class="nav-link-text">Creature / RPG</span>
+        </button>
+        <button class="nav-link" onclick="filterGenre('casual')">
+          <i class="fas fa-smile"></i>
+          <span class="nav-link-text">Casual</span>
+        </button>
+      </div>
+    </nav>
+  </aside>
+
+  <!-- ═══ MAIN ═══ -->
+  <main class="main">
+
+    <!-- GAMES PANEL -->
+    <div id="panel-games" class="content-panel active">
+      <div class="section-header">
+        <h2 class="section-title">Games Archive</h2>
+        <span class="section-count" id="visibleCount">18</span>
+      </div>
+
+      <div class="filter-bar" id="filterBar">
+        <div class="search-wrap">
+          <i class="fas fa-search"></i>
+          <input type="text" class="search-input" id="searchInput" placeholder="Search games…" oninput="handleSearch()">
+        </div>
+        <button class="filter-chip active" data-genre="all" onclick="filterGenreChip('all',this)">
+          <i class="fas fa-border-all"></i> All
+        </button>
+        <button class="filter-chip" data-genre="multiplayer" onclick="filterGenreChip('multiplayer',this)">
+          <i class="fas fa-users"></i> Multi
+        </button>
+        <button class="filter-chip" data-genre="adventure" onclick="filterGenreChip('adventure',this)">
+          <i class="fas fa-hat-wizard"></i> Adventure
+        </button>
+        <button class="filter-chip" data-genre="horror" onclick="filterGenreChip('horror',this)">
+          <i class="fas fa-ghost"></i> Horror
+        </button>
+        <button class="filter-chip" data-genre="creature" onclick="filterGenreChip('creature',this)">
+          <i class="fas fa-dragon"></i> Creature
+        </button>
+        <button class="filter-chip" data-genre="casual" onclick="filterGenreChip('casual',this)">
+          <i class="fas fa-smile"></i> Casual
+        </button>
+      </div>
+
+      <div class="game-grid" id="gameGrid">
+        <div class="empty-state" id="emptyState">
+          <i class="fas fa-search"></i>
+          <p>No games match your search.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- ABOUT PANEL - Includes Traveler_Caelum profile -->
+    <div id="panel-about" class="content-panel">
+      <div class="section-header">
+        <h2 class="section-title">About This Archive</h2>
+      </div>
+      
+      <div class="about-profile-card">
+        <a class="profile-card-large" href="https://www.roblox.com/users/2641095630/profile" target="_blank">
+          <img class="profile-avatar-large"
+            src="https://tr.rbxcdn.com/30DAY-AvatarHeadshot-A36AC6002ACCC61B95C8BD5450D09F75-Png/150/150/AvatarHeadshot/Webp/noFilter"
+            alt="Traveler_Caelum avatar">
+          <div class="profile-info-large">
+            <div class="profile-name-large">Traveler_Caelum</div>
+            <div class="profile-handle-large">@Traveler_Caelum</div>
+            <div class="profile-bio">Curator of this archive • Roblox enthusiast • Game explorer</div>
+          </div>
+        </a>
+      </div>
+      
+      <div class="about-card">
+        <h2>What is RBX Archive?</h2>
+        <p>I created this website to share my favorite Roblox games and to maintain a personal archive of everything I've played.</p>
+        <p>Each game is chosen for its unique creativity and entertainment value — whether it's a hidden gem or a widely loved classic.</p>
+        <p>This site is useful for both experienced Roblox players and newcomers looking for recommendations.</p>
+      </div>
+      <div class="about-card">
+        <h2>How to use</h2>
+        <p>Browse the <strong>Games</strong> tab to explore the full archive. Click any tile to open a detailed overlay with the game description, content rating, creator info, and my personal note. Use filters or search to narrow things down.</p>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<!-- ═══ MODAL ═══ -->
+<div class="modal-backdrop" id="modalBackdrop" onclick="closeModal(event)">
+  <div class="modal" id="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+    <div class="modal-wrap">
+      <img src="" alt="" class="modal-thumb" id="modalThumb">
+      <button class="modal-close" onclick="closeModalDirect()" aria-label="Close">
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
+    <div class="modal-body">
+      <h2 class="modal-title" id="modalTitle"></h2>
+      <p class="modal-creator" id="modalCreator"></p>
+      <div class="modal-rating" id="modalRating"></div>
+      <div class="modal-tags" id="modalTags"></div>
+      <div class="modal-divider"></div>
+      <p class="modal-desc" id="modalDesc"></p>
+      <div class="modal-note" id="modalNote"></div>
+      <div class="modal-actions">
+        <a class="btn-play" id="modalPlayBtn" href="#" target="_blank">
+          <i class="fas fa-play"></i> Play Now
+        </a>
+        <button class="btn-ghost" onclick="closeModalDirect()">
+          <i class="fas fa-arrow-left"></i> Back
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ MOBILE SNACKBAR ═══ -->
+<nav class="snackbar" id="snackbar" aria-label="Mobile navigation">
+  <button class="snack-btn active" data-panel="games" onclick="switchPanel('games',this)">
+    <i class="fas fa-gamepad"></i>
+    Games
+  </button>
+  <button class="snack-btn" data-panel="about" onclick="switchPanel('about',this)">
+    <i class="fas fa-info-circle"></i>
+    About
+  </button>
+</nav>
+
+<!-- ═══ FOOTER ═══ -->
+<footer class="site-footer">
+  <span class="footer-logo">RBX Archive • Traveler_Caelum</span>
+  <span style="color:var(--text-dim);font-size:11px">© 2024 Traveler_Caelum</span>
+</footer>
+
+<script src="/js/game-details-script.js"></script>
+<script src="/js/rbx-archive-script.js"></script>
+</body>
+</html>
