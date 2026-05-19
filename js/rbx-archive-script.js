@@ -1,14 +1,13 @@
 /* ════════════════════════════════════════
    rbx-archive-script.js
    MAIN INTERACTIVITY - With YouTube Autoplay & Horizontal Modal
+   UPDATED: Bidirectional filter sync + Favorites integration + Fandom Wiki Links
 ════════════════════════════════════════ */
 
 let activeGenre = "all";
 let searchQuery = "";
 let currentPanel = "games";
-
-// Store favorite games in localStorage
-let favorites = JSON.parse(localStorage.getItem('rbx_favorites') || '[]');
+let favoritesUnsubscribe = null;
 
 // Helper function to check if a URL is a YouTube link
 function isYouTubeUrl(url) {
@@ -66,6 +65,61 @@ function getRatingBadge(rating) {
   }
 }
 
+// Unified function to set active genre and update ALL UI elements
+function setActiveGenre(genre, clickedElement) {
+  activeGenre = genre;
+  
+  // Update all filter buttons (both sidebar and filter bar)
+  const allFilterButtons = document.querySelectorAll('.nav-link[onclick*="filterGenre"], .filter-chip');
+  
+  allFilterButtons.forEach(btn => {
+    // Determine which genre this button represents
+    let btnGenre = null;
+    const onclickAttr = btn.getAttribute('onclick');
+    
+    if (onclickAttr) {
+      if (onclickAttr.includes("filterGenre('favourites')")) btnGenre = 'favourites';
+      else if (onclickAttr.includes("filterGenre('all')")) btnGenre = 'all';
+      else if (onclickAttr.includes("filterGenre('multiplayer')")) btnGenre = 'multiplayer';
+      else if (onclickAttr.includes("filterGenre('adventure')")) btnGenre = 'adventure';
+      else if (onclickAttr.includes("filterGenre('horror')")) btnGenre = 'horror';
+      else if (onclickAttr.includes("filterGenre('creature')")) btnGenre = 'creature';
+      else if (onclickAttr.includes("filterGenre('casual')")) btnGenre = 'casual';
+      else if (onclickAttr.includes("filterGenreChip('favourites')")) btnGenre = 'favourites';
+      else if (onclickAttr.includes("filterGenreChip('all')")) btnGenre = 'all';
+      else if (onclickAttr.includes("filterGenreChip('multiplayer')")) btnGenre = 'multiplayer';
+      else if (onclickAttr.includes("filterGenreChip('adventure')")) btnGenre = 'adventure';
+      else if (onclickAttr.includes("filterGenreChip('horror')")) btnGenre = 'horror';
+      else if (onclickAttr.includes("filterGenreChip('creature')")) btnGenre = 'creature';
+      else if (onclickAttr.includes("filterGenreChip('casual')")) btnGenre = 'casual';
+    }
+    
+    // Also check data-genre attribute for filter chips
+    if (!btnGenre && btn.hasAttribute('data-genre')) {
+      btnGenre = btn.getAttribute('data-genre');
+    }
+    
+    // Apply or remove active class
+    if (btnGenre === genre) {
+      btn.classList.add('active');
+    } else {
+      btn.classList.remove('active');
+    }
+  });
+  
+  // Re-render tiles
+  renderTiles();
+}
+
+// Wrapper functions that call the unified setActiveGenre
+function filterGenre(genre) {
+  setActiveGenre(genre, null);
+}
+
+function filterGenreChip(genre, btn) {
+  setActiveGenre(genre, btn);
+}
+
 function createGameTile(game) {
   const tile = document.createElement("div");
   tile.className = "game-tile";
@@ -74,7 +128,7 @@ function createGameTile(game) {
   tile.setAttribute("aria-label", "View details for " + game.name);
   tile.dataset.id = game.id;
 
-  const isFav = favorites.includes(game.id);
+  const isFav = FavoritesSystem.isFavorite(game.id);
   const fallbackIcon = getFallbackIcon(game);
   const { cls, label } = getRatingBadge(game.rating);
 
@@ -137,8 +191,9 @@ function renderTiles() {
   const existingTiles = grid.querySelectorAll(".game-tile");
   existingTiles.forEach(t => t.remove());
 
-  const filtered = GAMES.filter(g => {
-    const matchGenre  = activeGenre === "all" || g.genres.includes(activeGenre);
+  let filtered = GAMES.filter(g => {
+    const matchGenre  = activeGenre === "all" || 
+                       (activeGenre === "favourites" ? FavoritesSystem.isFavorite(g.id) : g.genres.includes(activeGenre));
     const q           = searchQuery.toLowerCase();
     const matchSearch = !q || g.name.toLowerCase().includes(q) || g.tags.some(t => t.toLowerCase().includes(q));
     return matchGenre && matchSearch;
@@ -149,6 +204,18 @@ function renderTiles() {
 
   if (filtered.length === 0) {
     empty.style.display = "block";
+    // Customize empty state message for favorites
+    if (activeGenre === "favourites") {
+      const emptyMessage = empty.querySelector('p');
+      if (emptyMessage) {
+        emptyMessage.innerHTML = '<i class="fas fa-star" style="font-size:36px;display:block;margin-bottom:12px;color:var(--text-dim);"></i>No favorited games yet.<br>Click the <i class="fas fa-star"></i> star on any game to add it to your favorites!';
+      }
+    } else {
+      const emptyMessage = empty.querySelector('p');
+      if (emptyMessage) {
+        emptyMessage.innerHTML = 'No games match your search.';
+      }
+    }
     return;
   }
   empty.style.display = "none";
@@ -231,7 +298,25 @@ function openModal(game) {
   }
   if (modalTags)    modalTags.innerHTML    = game.tags.map(t => `<span class="modal-tag">${escapeHtml(t)}</span>`).join("");
   if (modalDesc)    modalDesc.textContent  = game.desc;
-  if (modalNote)    modalNote.innerHTML    = game.note || 'No personal note available for this game yet.';
+  
+  // Update modal note to include Fandom link if it exists
+  if (modalNote) {
+    let noteHtml = game.note || 'No personal note available for this game yet.';
+    
+    // Add Fandom wiki profile link if available
+    if (game.fandomUrl) {
+      noteHtml += `<div class="modal-fandom-link" style="margin-top: 16px; padding-top: 12px; border-top: 1px solid var(--border-subtle);">
+        <i class="fab fa-wikipedia-w" style="color: var(--accent); margin-right: 8px; font-size: 18px;"></i>
+        <a href="${game.fandomUrl}" target="_blank" rel="noopener noreferrer" style="color: var(--accent); text-decoration: none; font-weight: 600;">
+          My Fandom Wiki Profile <i class="fas fa-external-link-alt" style="font-size: 11px; margin-left: 4px;"></i>
+        </a>
+        <span style="color: var(--text-dim); font-size: 11px;">— Check out my wiki contributions</span>
+      </div>`;
+    }
+    
+    modalNote.innerHTML = noteHtml;
+  }
+  
   if (modalPlayBtn) modalPlayBtn.href      = game.url;
 
   if (modalBackdrop) {
@@ -264,18 +349,6 @@ function closeModalDirect() {
     document.body.style.overflow = "";
   }
   if (modalMediaWrapper) removeVideoFromModal(modalMediaWrapper);
-}
-
-function filterGenre(genre) {
-  activeGenre = genre;
-  renderTiles();
-}
-
-function filterGenreChip(genre, btn) {
-  activeGenre = genre;
-  document.querySelectorAll(".filter-chip").forEach(c => c.classList.remove("active"));
-  if (btn) btn.classList.add("active");
-  renderTiles();
 }
 
 function handleSearch() {
@@ -314,15 +387,21 @@ function switchPanel(panel, btn) {
 }
 
 function toggleFav(gameId, btnElement) {
-  const index = favorites.indexOf(gameId);
-  if (index === -1) {
-    favorites.push(gameId);
-    if (btnElement) btnElement.classList.add('fav-active');
-  } else {
-    favorites.splice(index, 1);
-    if (btnElement) btnElement.classList.remove('fav-active');
+  const newState = FavoritesSystem.toggle(gameId);
+  
+  // Update button visual
+  if (btnElement) {
+    if (newState) {
+      btnElement.classList.add('fav-active');
+    } else {
+      btnElement.classList.remove('fav-active');
+    }
   }
-  localStorage.setItem('rbx_favorites', JSON.stringify(favorites));
+  
+  // If currently viewing favorites filter, re-render to show/hide the game
+  if (activeGenre === 'favourites') {
+    renderTiles();
+  }
 }
 
 function escapeHtml(str) {
@@ -348,14 +427,48 @@ function initKeyboardShortcuts() {
   });
 }
 
+function initFavoritesSubscription() {
+  // Subscribe to favorites changes to update UI in real-time
+  if (favoritesUnsubscribe) {
+    favoritesUnsubscribe();
+  }
+  
+  favoritesUnsubscribe = FavoritesSystem.subscribe(function(action, gameId, allFavorites) {
+    // Update all favorite buttons on existing tiles if they match
+    const allFavButtons = document.querySelectorAll('.tile-fav');
+    allFavButtons.forEach(btn => {
+      const btnGameId = btn.getAttribute('data-id');
+      if (btnGameId === gameId) {
+        if (action === 'add') {
+          btn.classList.add('fav-active');
+        } else if (action === 'remove') {
+          btn.classList.remove('fav-active');
+        }
+      }
+    });
+    
+    // If we're on the favourites filter, re-render to update visibility
+    if (activeGenre === 'favourites') {
+      renderTiles();
+    }
+  });
+}
+
 document.addEventListener("DOMContentLoaded", () => {
   initSidebar();
   initKeyboardShortcuts();
+  initFavoritesSubscription();
+  
   const filterBar = document.getElementById("filterBar");
   if (filterBar && currentPanel === "games") filterBar.style.display = "flex";
+  
+  // Set initial active states
+  setActiveGenre('all', null);
+  
   renderTiles();
 });
 
+// Make functions available globally
 window.filterGenre      = filterGenre;
 window.filterGenreChip  = filterGenreChip;
 window.handleSearch     = handleSearch;
@@ -363,3 +476,4 @@ window.switchPanel      = switchPanel;
 window.closeModal       = closeModal;
 window.closeModalDirect = closeModalDirect;
 window.toggleFav        = toggleFav;
+window.FavoritesSystem  = FavoritesSystem;

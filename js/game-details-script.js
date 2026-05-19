@@ -71,7 +71,8 @@ const GAMES = [
     genres: ["creature", "adventure"],
     content: "Suitable for everyone",
     desc: "An imaginative game set on a mysterious island teeming with unique creatures called Doodles. Explore, collect and trade over a thousand different Doodle skins, and battle other players. Updated every Saturday with fresh content. Premium users earn gems per hour of play.",
-    note: "I was obsessed with this before college. I'd recommend hunting misprints (shinies) as mini trophies."
+    note: "I was obsessed with this before college. I'd recommend hunting misprints (shinies) as mini trophies.",
+    fandomUrl: "https://doodle-world.fandom.com/wiki/User:Caelxm"
   },
   {
     id: "epic-minigames",
@@ -151,7 +152,8 @@ const GAMES = [
     genres: ["creature", "adventure"],
     content: "Suitable for everyone",
     desc: "An immersive MMO Adventure RPG — explore, collect, battle, and trade. With constant updates and new content, Loomian Legacy promises an ever-evolving experience with two shiny variants (alpha and gamma) and limited-skin Loomians.",
-    note: "The first Pokémon-inspired game I played on Roblox. It offers much more than its reference game with two gleaming types and limited skins."
+    note: "The first Pokémon-inspired game I played on Roblox. It offers much more than its reference game with two gleaming types and limited skins.",
+    fandomUrl: "https://loomian-legacy.fandom.com/wiki/User:Caelxm"
   },
   {
     id: "natural-disaster",
@@ -263,7 +265,8 @@ const GAMES = [
     genres: ["creature", "adventure"],
     content: "Suitable for everyone",
     desc: "A creature-catching MMO in early development. Choose your starter and set out to catch unique Tanorians, completing the Tanopedia. Battle Stadium Stars and raise your Tamer level — an immersive experience with even greater adventures to come.",
-    note: "I made progress in the game and gotten an alpha starter, my alt got a shiny starter on the start. It's a promising game to watch as it develops, especially if you enjoy creature-catching MMOs."
+    note: "I made progress in the game and gotten an alpha starter, my alt got a shiny starter on the start. It's a promising game to watch as it develops, especially if you enjoy creature-catching MMOs.",
+    fandomUrl: "https://talesoftanorio.fandom.com/wiki/User:Caelxm"
   },
   {
     id: "race-world",
