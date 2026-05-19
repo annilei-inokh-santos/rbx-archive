@@ -13,7 +13,7 @@ let favorites = JSON.parse(localStorage.getItem('rbx_favorites') || '[]');
 // Helper function to check if a URL is a YouTube link
 function isYouTubeUrl(url) {
   if (!url) return false;
-  return url.includes('youtube.com/watch?v=') || 
+  return url.includes('youtube.com/watch?v=') ||
          url.includes('youtu.be/') ||
          url.includes('youtube.com/embed/');
 }
@@ -25,7 +25,6 @@ function getYouTubeId(url) {
     /(?:youtu\.be\/)([^?]+)/,
     /(?:youtube\.com\/embed\/)([^?]+)/
   ];
-  
   for (const pattern of patterns) {
     const match = url.match(pattern);
     if (match) return match[1];
@@ -37,7 +36,6 @@ function getYouTubeId(url) {
 function getYouTubeEmbedUrl(url, autoplay = true) {
   const videoId = getYouTubeId(url);
   if (!videoId) return null;
-  
   return `https://www.youtube.com/embed/${videoId}?autoplay=${autoplay ? '1' : '0'}&mute=1&modestbranding=1&rel=0&playsinline=1`;
 }
 
@@ -50,11 +48,22 @@ function getYouTubeThumbnail(url) {
 // Helper function to get fallback icon based on game's primary genre
 function getFallbackIcon(game) {
   if (game.genres.includes('multiplayer')) return 'fa-users';
-  if (game.genres.includes('adventure')) return 'fa-hat-wizard';
-  if (game.genres.includes('horror')) return 'fa-ghost';
-  if (game.genres.includes('creature')) return 'fa-dragon';
-  if (game.genres.includes('casual')) return 'fa-smile';
+  if (game.genres.includes('adventure'))  return 'fa-hat-wizard';
+  if (game.genres.includes('horror'))     return 'fa-ghost';
+  if (game.genres.includes('creature'))   return 'fa-dragon';
+  if (game.genres.includes('casual'))     return 'fa-smile';
   return 'fa-gamepad';
+}
+
+// Maps a game's rating string to a CSS modifier class and display label
+function getRatingBadge(rating) {
+  switch ((rating || '').toLowerCase()) {
+    case 'minimal':    return { cls: 'badge-minimal',    label: 'Minimal' };
+    case 'mild':       return { cls: 'badge-mild',       label: 'Mild' };
+    case 'moderate':   return { cls: 'badge-moderate',   label: 'Moderate' };
+    case 'restricted': return { cls: 'badge-restricted', label: 'Restricted' };
+    default:           return { cls: 'badge-minimal',    label: rating || 'Minimal' };
+  }
 }
 
 function createGameTile(game) {
@@ -64,57 +73,52 @@ function createGameTile(game) {
   tile.setAttribute("role", "button");
   tile.setAttribute("aria-label", "View details for " + game.name);
   tile.dataset.id = game.id;
-  
-  // Check if game is favorited
+
   const isFav = favorites.includes(game.id);
   const fallbackIcon = getFallbackIcon(game);
-  
-  // Create image wrapper for fallback handling
+  const { cls, label } = getRatingBadge(game.rating);
+
   const imageHtml = `
     <div class="tile-image-wrapper">
-      <img class="tile-icon" 
-           src="${game.icon}" 
-           alt="${game.name} thumbnail" 
+      <img class="tile-icon"
+           src="${game.icon}"
+           alt="${game.name} thumbnail"
            loading="lazy"
            onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';"
-           style="width: 100%; height: 100%; object-fit: cover;">
-      <div class="tile-icon-fallback" 
-           style="display: none;">
+           style="width:100%;height:100%;object-fit:cover;">
+      <div class="tile-icon-fallback" style="display:none;">
         <i class="fas ${fallbackIcon}"></i>
       </div>
     </div>
   `;
-  
+
   tile.innerHTML = `
     ${imageHtml}
-    <span class="tile-badge">All Ages</span>
+    <span class="tile-badge ${cls}">${label}</span>
     <button class="tile-fav ${isFav ? 'fav-active' : ''}" data-id="${game.id}" aria-label="Favorite">
       <i class="fas fa-star"></i>
     </button>
     <div class="tile-body">
       <p class="tile-name">${escapeHtml(game.name)}</p>
       <div class="tile-meta">
-        <i class="fas fa-calendar-alt" style="font-size:10px"></i> 
+        <i class="fas fa-calendar-alt" style="font-size:10px"></i>
         <span>${game.date}</span>
       </div>
     </div>
   `;
-  
-  // Add click handler for tile
+
   tile.addEventListener("click", (e) => {
     if (e.target.closest(".tile-fav")) return;
     openModal(game);
   });
-  
-  // Add keydown handler for accessibility
+
   tile.addEventListener("keydown", (e) => {
-    if (e.key === "Enter" || e.key === " ") { 
-      e.preventDefault(); 
+    if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
       openModal(game);
     }
   });
-  
-  // Add favorite button handler
+
   const favBtn = tile.querySelector('.tile-fav');
   if (favBtn) {
     favBtn.addEventListener("click", (e) => {
@@ -122,21 +126,20 @@ function createGameTile(game) {
       toggleFav(game.id, favBtn);
     });
   }
-  
+
   return tile;
 }
 
 function renderTiles() {
-  const grid = document.getElementById("gameGrid");
+  const grid  = document.getElementById("gameGrid");
   const empty = document.getElementById("emptyState");
 
-  // Remove existing tiles
   const existingTiles = grid.querySelectorAll(".game-tile");
   existingTiles.forEach(t => t.remove());
 
   const filtered = GAMES.filter(g => {
-    const matchGenre = activeGenre === "all" || g.genres.includes(activeGenre);
-    const q = searchQuery.toLowerCase();
+    const matchGenre  = activeGenre === "all" || g.genres.includes(activeGenre);
+    const q           = searchQuery.toLowerCase();
     const matchSearch = !q || g.name.toLowerCase().includes(q) || g.tags.some(t => t.toLowerCase().includes(q));
     return matchGenre && matchSearch;
   });
@@ -158,29 +161,26 @@ function renderTiles() {
 }
 
 function openModal(game) {
-  const modalBackdrop = document.getElementById("modalBackdrop");
-  const modalThumb = document.getElementById("modalThumb");
-  const modalTitle = document.getElementById("modalTitle");
-  const modalCreator = document.getElementById("modalCreator");
-  const modalRating = document.getElementById("modalRating");
-  const modalTags = document.getElementById("modalTags");
-  const modalDesc = document.getElementById("modalDesc");
-  const modalNote = document.getElementById("modalNote");
-  const modalPlayBtn = document.getElementById("modalPlayBtn");
+  const modalBackdrop     = document.getElementById("modalBackdrop");
+  const modalThumb        = document.getElementById("modalThumb");
+  const modalTitle        = document.getElementById("modalTitle");
+  const modalCreator      = document.getElementById("modalCreator");
+  const modalRating       = document.getElementById("modalRating");
+  const modalTags         = document.getElementById("modalTags");
+  const modalDesc         = document.getElementById("modalDesc");
+  const modalNote         = document.getElementById("modalNote");
+  const modalPlayBtn      = document.getElementById("modalPlayBtn");
   const modalMediaWrapper = document.querySelector('.modal-media-wrapper');
 
-  // Clear previous content
   removeVideoFromModal(modalMediaWrapper);
   modalThumb.style.display = 'block';
   modalThumb.onerror = null;
 
-  // Handle YouTube videos or regular images
   if (isYouTubeUrl(game.thumb)) {
     const embedUrl = getYouTubeEmbedUrl(game.thumb, true);
-    
     if (embedUrl) {
       modalThumb.style.display = 'none';
-      
+
       const iframe = document.createElement('iframe');
       iframe.className = 'modal-video';
       iframe.src = embedUrl;
@@ -190,17 +190,15 @@ function openModal(game) {
       iframe.style.display = 'block';
       iframe.allow = 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture';
       iframe.allowFullscreen = true;
-      
+
       const playOverlay = document.createElement('div');
       playOverlay.className = 'video-play-overlay';
       playOverlay.innerHTML = '<i class="fas fa-volume-mute"></i> Video plays muted • Click to unmute';
-      
+
       modalMediaWrapper.appendChild(iframe);
       modalMediaWrapper.appendChild(playOverlay);
-      
-      setTimeout(() => {
-        playOverlay.style.opacity = '0';
-      }, 4000);
+
+      setTimeout(() => { playOverlay.style.opacity = '0'; }, 4000);
     } else {
       modalThumb.style.display = 'block';
       modalThumb.src = getYouTubeThumbnail(game.thumb);
@@ -209,7 +207,6 @@ function openModal(game) {
   } else {
     modalThumb.src = game.thumb;
     modalThumb.alt = game.name;
-    
     modalThumb.onerror = function() {
       this.style.display = 'none';
       let fallbackDiv = modalMediaWrapper.querySelector('.modal-thumb-fallback');
@@ -223,22 +220,19 @@ function openModal(game) {
       }
     };
   }
-  
-  if (modalTitle) modalTitle.textContent = game.name;
+
+  if (modalTitle)   modalTitle.textContent = game.name;
   if (modalCreator) {
     modalCreator.innerHTML = `Created ${game.date} · by <a href="${game.creatorUrl}" target="_blank">${escapeHtml(game.creator)}</a>`;
   }
   if (modalRating) {
-    modalRating.innerHTML = `<i class="fas fa-shield-alt"></i> ${game.rating} · ${game.content}`;
+    const { label } = getRatingBadge(game.rating);
+    modalRating.innerHTML = `<i class="fas fa-shield-alt"></i> ${label} · ${game.content}`;
   }
-  if (modalTags) {
-    modalTags.innerHTML = game.tags.map(t => `<span class="modal-tag">${escapeHtml(t)}</span>`).join("");
-  }
-  if (modalDesc) modalDesc.textContent = game.desc;
-  if (modalNote) {
-    modalNote.innerHTML = game.note || 'No personal note available for this game yet.';
-  }
-  if (modalPlayBtn) modalPlayBtn.href = game.url;
+  if (modalTags)    modalTags.innerHTML    = game.tags.map(t => `<span class="modal-tag">${escapeHtml(t)}</span>`).join("");
+  if (modalDesc)    modalDesc.textContent  = game.desc;
+  if (modalNote)    modalNote.innerHTML    = game.note || 'No personal note available for this game yet.';
+  if (modalPlayBtn) modalPlayBtn.href      = game.url;
 
   if (modalBackdrop) {
     modalBackdrop.classList.add("open");
@@ -248,15 +242,12 @@ function openModal(game) {
 
 function removeVideoFromModal(modalMediaWrapper) {
   if (!modalMediaWrapper) return;
-  
-  const existingIframe = modalMediaWrapper.querySelector('.modal-video');
+  const existingIframe  = modalMediaWrapper.querySelector('.modal-video');
   if (existingIframe) existingIframe.remove();
-  
   const existingOverlay = modalMediaWrapper.querySelector('.video-play-overlay');
-  if (existingOverlay) existingOverlay.remove();
-  
-  const fallbackDiv = modalMediaWrapper.querySelector('.modal-thumb-fallback');
-  if (fallbackDiv) fallbackDiv.remove();
+  if (existingOverlay)  existingOverlay.remove();
+  const fallbackDiv     = modalMediaWrapper.querySelector('.modal-thumb-fallback');
+  if (fallbackDiv)      fallbackDiv.remove();
 }
 
 function closeModal(event) {
@@ -266,17 +257,13 @@ function closeModal(event) {
 }
 
 function closeModalDirect() {
-  const modalBackdrop = document.getElementById("modalBackdrop");
+  const modalBackdrop     = document.getElementById("modalBackdrop");
   const modalMediaWrapper = document.querySelector('.modal-media-wrapper');
-  
   if (modalBackdrop) {
     modalBackdrop.classList.remove("open");
     document.body.style.overflow = "";
   }
-  
-  if (modalMediaWrapper) {
-    removeVideoFromModal(modalMediaWrapper);
-  }
+  if (modalMediaWrapper) removeVideoFromModal(modalMediaWrapper);
 }
 
 function filterGenre(genre) {
@@ -286,10 +273,8 @@ function filterGenre(genre) {
 
 function filterGenreChip(genre, btn) {
   activeGenre = genre;
-  
   document.querySelectorAll(".filter-chip").forEach(c => c.classList.remove("active"));
   if (btn) btn.classList.add("active");
-  
   renderTiles();
 }
 
@@ -314,17 +299,17 @@ function switchPanel(panel, btn) {
     .forEach(b => b.classList.add("active"));
 
   const filterSectionLabel = document.getElementById("filterSectionLabel");
-  const filterButtons = document.getElementById("filterButtons");
-  const filterBar = document.getElementById("filterBar");
-  
+  const filterButtons      = document.getElementById("filterButtons");
+  const filterBar          = document.getElementById("filterBar");
+
   if (panel === "games") {
     if (filterSectionLabel) filterSectionLabel.classList.remove("hidden");
-    if (filterButtons) filterButtons.classList.remove("hidden");
-    if (filterBar) filterBar.style.display = "flex";
+    if (filterButtons)      filterButtons.classList.remove("hidden");
+    if (filterBar)          filterBar.style.display = "flex";
   } else {
     if (filterSectionLabel) filterSectionLabel.classList.add("hidden");
-    if (filterButtons) filterButtons.classList.add("hidden");
-    if (filterBar) filterBar.style.display = "none";
+    if (filterButtons)      filterButtons.classList.add("hidden");
+    if (filterBar)          filterBar.style.display = "none";
   }
 }
 
@@ -332,14 +317,10 @@ function toggleFav(gameId, btnElement) {
   const index = favorites.indexOf(gameId);
   if (index === -1) {
     favorites.push(gameId);
-    if (btnElement) {
-      btnElement.classList.add('fav-active');
-    }
+    if (btnElement) btnElement.classList.add('fav-active');
   } else {
     favorites.splice(index, 1);
-    if (btnElement) {
-      btnElement.classList.remove('fav-active');
-    }
+    if (btnElement) btnElement.classList.remove('fav-active');
   }
   localStorage.setItem('rbx_favorites', JSON.stringify(favorites));
 }
@@ -353,8 +334,7 @@ function escapeHtml(str) {
 
 function initSidebar() {
   const sidebarToggle = document.getElementById("sidebarToggle");
-  const sidebar = document.getElementById("sidebar");
-  
+  const sidebar       = document.getElementById("sidebar");
   if (sidebarToggle && sidebar) {
     sidebarToggle.addEventListener("click", () => {
       sidebar.classList.toggle("open");
@@ -364,28 +344,22 @@ function initSidebar() {
 
 function initKeyboardShortcuts() {
   document.addEventListener("keydown", (e) => {
-    if (e.key === "Escape") {
-      closeModalDirect();
-    }
+    if (e.key === "Escape") closeModalDirect();
   });
 }
 
 document.addEventListener("DOMContentLoaded", () => {
   initSidebar();
   initKeyboardShortcuts();
-  
   const filterBar = document.getElementById("filterBar");
-  if (filterBar && currentPanel === "games") {
-    filterBar.style.display = "flex";
-  }
-  
+  if (filterBar && currentPanel === "games") filterBar.style.display = "flex";
   renderTiles();
 });
 
-window.filterGenre = filterGenre;
-window.filterGenreChip = filterGenreChip;
-window.handleSearch = handleSearch;
-window.switchPanel = switchPanel;
-window.closeModal = closeModal;
+window.filterGenre      = filterGenre;
+window.filterGenreChip  = filterGenreChip;
+window.handleSearch     = handleSearch;
+window.switchPanel      = switchPanel;
+window.closeModal       = closeModal;
 window.closeModalDirect = closeModalDirect;
-window.toggleFav = toggleFav;
+window.toggleFav        = toggleFav;

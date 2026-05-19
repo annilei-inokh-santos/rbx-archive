@@ -46,6 +46,10 @@
       <span class="nav-section-label filter-section-label" id="filterSectionLabel">Filter</span>
 
       <div id="filterButtons">
+        <button class="nav-link" onclick="filterGenre('favourites')">
+          <i class="fas fa-star"></i>
+          <span class="nav-link-text">Favourites</span>
+        </button>
         <button class="nav-link" onclick="filterGenre('all')">
           <i class="fas fa-border-all"></i>
           <span class="nav-link-text">All Games</span>
@@ -89,6 +93,9 @@
           <i class="fas fa-search"></i>
           <input type="text" class="search-input" id="searchInput" placeholder="Search games…" oninput="handleSearch()">
         </div>
+        <button class="filter-chip" data-genre="favourites" onclick="filterGenreChip('favourites', this)">
+          <i class="fas fa-star"></i> Favourites
+        </button>
         <button class="filter-chip active" data-genre="all" onclick="filterGenreChip('all',this)">
           <i class="fas fa-border-all"></i> All
         </button>
@@ -214,6 +221,7 @@
   <span style="color:var(--text-dim);font-size:11px">© 2024 Traveler_Caelum</span>
 </footer>
 
+<script src="js/rbx-favs-script.js"></script>
 <script src="js/game-details-script.js"></script>
 <script src="js/rbx-archive-script.js"></script>
 </body>

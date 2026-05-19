@@ -512,47 +512,81 @@ a:hover { color: #5ecfea; }
   text-transform: uppercase;
   padding: 3px 9px;
   border-radius: 99px;
-  border: 1px solid rgba(0,180,216,0.55);
   position: absolute;
   top: 8px;
   left: 8px;
   background: rgba(9,10,13,0.82);
   backdrop-filter: blur(6px);
   -webkit-backdrop-filter: blur(6px);
-  color: #a8eeff;
   box-shadow: 0 1px 6px rgba(0,0,0,0.5);
+  /* default = minimal */
+  border: 1px solid rgba(0,180,216,0.55);
+  color: #a8eeff;
 }
 
+/* ── Rating colour variants ── */
+.tile-badge.badge-minimal {
+  border-color: rgba(0,180,216,0.55);
+  color: #a8eeff;
+}
+.tile-badge.badge-mild {
+  border-color: rgba(255,180,0,0.55);
+  color: #ffd670;
+}
+.tile-badge.badge-moderate {
+  border-color: rgba(255,110,0,0.55);
+  color: #ffaa70;
+}
+.tile-badge.badge-restricted {
+  border-color: rgba(220,50,50,0.55);
+  color: #ff8080;
+}
+
+/* ── Favorite button ── */
 .tile-fav {
   position: absolute;
   top: 8px;
   right: 8px;
-  width: 26px;
-  height: 26px;
-  background: rgba(11,12,15,0.7);
-  border: 1px solid var(--border-subtle);
+  width: 28px;
+  height: 28px;
+  background: rgba(9,10,13,0.82);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  border: 1px solid var(--border-default);
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 11px;
-  color: var(--gold);
+  /* hidden by default; shown on tile hover or when active */
+  color: var(--text-dim);
   opacity: 0;
-  transition: opacity var(--transition);
+  transition: opacity var(--transition), color var(--transition), border-color var(--transition), transform var(--transition);
   cursor: pointer;
+  box-shadow: 0 1px 6px rgba(0,0,0,0.5);
 }
 
+/* Show as dim/outline on tile hover (not favorited) */
+.game-tile:hover .tile-fav {
+  opacity: 1;
+  color: var(--text-muted);
+}
+
+/* Hover over the button itself — hint it will activate */
+.tile-fav:hover {
+  color: var(--gold) !important;
+  border-color: rgba(244,197,66,0.5);
+  transform: scale(1.1);
+}
+
+/* Favorited — always visible, gold */
 .tile-fav.fav-active {
   opacity: 1;
   color: var(--gold);
+  border-color: rgba(244,197,66,0.45);
 }
 
-.tile-fav.fav-active i {
-  color: var(--gold);
-}
-
-.game-tile:hover .tile-fav,
-.game-tile.fav .tile-fav { opacity: 1; }
+.tile-fav.fav-active i { color: var(--gold); }
 
 .empty-state {
   grid-column: 1 / -1;
@@ -586,7 +620,7 @@ a:hover { color: #5ecfea; }
   padding: 24px;
   transition: all var(--transition);
   text-decoration: none;
-  max-width: 500px;
+  max-width: 640px;
 }
 
 .profile-card-large:hover {
@@ -868,96 +902,6 @@ a:hover { color: #5ecfea; }
   padding: 4px 12px;
   color: var(--accent);
   margin-bottom: 16px;
-}
-
-/* ═══════════════════════════════════════
-   RATING BADGE STYLES - Updated Colors
-   ═══════════════════════════════════════ */
-
-.tile-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  font-size: 9px;
-  font-family: var(--font-mono);
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  padding: 3px 9px;
-  border-radius: 99px;
-  border: 1px solid rgba(0,180,216,0.55);
-  position: absolute;
-  top: 8px;
-  left: 8px;
-  background: rgba(9,10,13,0.82);
-  backdrop-filter: blur(6px);
-  -webkit-backdrop-filter: blur(6px);
-  color: #a8eeff;
-  box-shadow: 0 1px 6px rgba(0,0,0,0.5);
-  transition: all var(--transition);
-}
-
-.tile-badge.rating-e {
-  border-color: rgba(74,157,111,0.55);
-  background: rgba(74,157,111,0.15);
-  color: #4a9d6f;
-}
-
-.tile-badge.rating-e10 {
-  border-color: rgba(244,197,66,0.55);
-  background: rgba(244,197,66,0.15);
-  color: #f4c542;
-}
-
-.tile-badge.rating-t {
-  border-color: rgba(244,164,96,0.55);
-  background: rgba(244,164,96,0.15);
-  color: #f4a460;
-}
-
-.tile-badge.rating-m {
-  border-color: rgba(231,76,60,0.55);
-  background: rgba(231,76,60,0.15);
-  color: #e74c3c;
-}
-
-.modal-rating {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 11px;
-  font-family: var(--font-mono);
-  background: var(--accent-dim);
-  border: 1px solid rgba(0,180,216,0.2);
-  border-radius: 99px;
-  padding: 6px 14px;
-  color: var(--accent);
-  margin-bottom: 16px;
-  transition: all var(--transition);
-}
-
-.modal-rating.rating-e {
-  background: rgba(74,157,111,0.15);
-  border-color: rgba(74,157,111,0.35);
-  color: #4a9d6f;
-}
-
-.modal-rating.rating-e10 {
-  background: rgba(244,197,66,0.15);
-  border-color: rgba(244,197,66,0.35);
-  color: #f4c542;
-}
-
-.modal-rating.rating-t {
-  background: rgba(244,164,96,0.15);
-  border-color: rgba(244,164,96,0.35);
-  color: #f4a460;
-}
-
-.modal-rating.rating-m {
-  background: rgba(231,76,60,0.15);
-  border-color: rgba(231,76,60,0.35);
-  color: #e74c3c;
 }
 
 .modal-tags {

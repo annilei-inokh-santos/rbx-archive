@@ -1,14 +1,12 @@
 /* ════════════════════════════════════════
    game-details-script.js
-   GAME DATA - Complete game database with updated ratings
+   GAME DATA - Complete game database
+   Ratings updated May 2026 to reflect
+   Roblox's current content maturity system
+   (Minimal / Mild / Moderate / Restricted)
+   which replaced the old "All Ages" label
+   in November 2024.
 ════════════════════════════════════════ */
-
-const RATING_SYSTEM = {
-  "E": { label: "Everyone", color: "#4a9d6f", icon: "fa-smile", bgColor: "rgba(74,157,111,0.15)" },
-  "E10+": { label: "Ages 10+", color: "#f4c542", icon: "fa-star", bgColor: "rgba(244,197,66,0.15)" },
-  "T": { label: "Teen 13+", color: "#f4a460", icon: "fa-exclamation-triangle", bgColor: "rgba(244,164,96,0.15)" },
-  "M": { label: "Mature 17+", color: "#e74c3c", icon: "fa-fire", bgColor: "rgba(231,76,60,0.15)" }
-};
 
 const GAMES = [
   {
@@ -20,10 +18,10 @@ const GAMES = [
     creator: "uglyburger0",
     creatorUrl: "https://www.roblox.com/users/22718068/profile",
     date: "Jan. 20, 2019",
-    rating: "E10+",
+    rating: "Mild",
     tags: ["survival", "horror", "backrooms"],
     genres: ["horror", "adventure"],
-    content: "Violence (Mild/Occasional), Blood (Unrealistic)",
+    content: "Violence (Mild/Repeated), Blood (Unrealistic/Heavy), Fear (Repeated)",
     desc: "A thrilling survival experience set within the vast aisles of an endless furniture store. Navigate the unsettling landscape, build your base with items from shelves, and avoid the persistent chase of mysterious employees. Inspired by the Endless Ikea Backrooms concept.",
     note: "Playing with friends is highly recommended to enhance the fun and excitement."
   },
@@ -36,7 +34,7 @@ const GAMES = [
     creator: "valtkins / 2GO",
     creatorUrl: "https://www.roblox.com/users/23108718/profile",
     date: "Mar. 9, 2021",
-    rating: "E",
+    rating: "Minimal",
     tags: ["multiplayer", "party", "board game"],
     genres: ["multiplayer", "casual"],
     content: "Violence (Mild/Occasional)",
@@ -52,7 +50,7 @@ const GAMES = [
     creator: "Muneeb",
     creatorUrl: "https://www.roblox.com/users/61648063/profile",
     date: "Jul. 4, 2021",
-    rating: "E",
+    rating: "Minimal",
     tags: ["avatar", "customization", "social"],
     genres: ["casual"],
     content: "Suitable for everyone",
@@ -68,7 +66,7 @@ const GAMES = [
     creator: "wish_z / Doodle World Studios",
     creatorUrl: "https://www.roblox.com/users/2210737/profile",
     date: "May 31, 2020",
-    rating: "E",
+    rating: "Minimal",
     tags: ["creature", "collecting", "battles"],
     genres: ["creature", "adventure"],
     content: "Suitable for everyone",
@@ -84,10 +82,10 @@ const GAMES = [
     creator: "TypicalType / Typical Games",
     creatorUrl: "https://www.roblox.com/users/7568292/profile",
     date: "Jul. 29, 2015",
-    rating: "E10+",
+    rating: "Mild",
     tags: ["minigames", "party", "competitive"],
     genres: ["multiplayer", "casual"],
-    content: "Violence (Mild/Occasional)",
+    content: "Violence (Mild/Repeated)",
     desc: "130 unique minigames to test your skills. Win to level up and earn coins for gear, pets, effects, and more. The Epic Party mode is a board game where up to 12 players compete to collect the most crystals — perfect for groups.",
     note: "Great for sharpening competitive skills. Epic Party is the go-to mode with friends — it holds 12+ players."
   },
@@ -100,7 +98,7 @@ const GAMES = [
     creator: "CloudEntertainment",
     creatorUrl: "https://www.roblox.com/users/1309575230/profile",
     date: "Feb. 18, 2019",
-    rating: "E",
+    rating: "Minimal",
     tags: ["fishing", "exploration", "simulation"],
     genres: ["casual", "adventure"],
     content: "Suitable for everyone",
@@ -116,23 +114,23 @@ const GAMES = [
     creator: "32bitPC / Team M0THERB0ARD",
     creatorUrl: "https://www.roblox.com/users/44935606/profile",
     date: "Jan. 1, 2016",
-    rating: "T",
+    rating: "Moderate",
     tags: ["horror", "mystery", "psychological"],
     genres: ["horror"],
-    content: "Psychological Horror, Suspenseful Atmosphere",
+    content: "Fear (Moderate/Frequent), Violence (Mild/Occasional)",
     desc: "An atmospheric psychological thriller with a haunting soundtrack and eerie ambiance. Players are thrust into a world of psychological twists and turns that keeps you on the edge of your seat — a must-play for fans of mystery games.",
     note: "Start here before any other thriller games. It's a classic, and infinitely more fun with friends."
   },
   {
     id: "kinalite-kingdom",
-    name: "Kinalite Kingdom",
+    name: "Kinalite Kingdom Early Access",
     thumb: "assets/thumbnails/kinalite-kingdom-tn.png",
     icon: "assets/icons/kinalite-kingdom.png",
     url: "https://www.roblox.com/games/11363304471/Kinalite-Kingdom-Early-Access",
     creator: "ImSoaren / Vast Seed Studios",
     creatorUrl: "https://www.roblox.com/users/91570186/profile",
     date: "Oct. 24, 2022",
-    rating: "E",
+    rating: "Minimal",
     tags: ["creature", "open-world", "early access"],
     genres: ["creature", "adventure"],
     content: "Suitable for everyone",
@@ -148,7 +146,7 @@ const GAMES = [
     creator: "lando64000 / Llama Train Studios",
     creatorUrl: "https://www.roblox.com/users/1123551/profile",
     date: "Oct. 17, 2016",
-    rating: "E",
+    rating: "Minimal",
     tags: ["creature", "RPG", "MMO"],
     genres: ["creature", "adventure"],
     content: "Suitable for everyone",
@@ -164,7 +162,7 @@ const GAMES = [
     creator: "Stickmaster",
     creatorUrl: "https://www.roblox.com/users/80254/profile",
     date: "Mar. 29, 2008",
-    rating: "E",
+    rating: "Minimal",
     tags: ["survival", "classic", "casual"],
     genres: ["casual", "adventure"],
     content: "Suitable for everyone",
@@ -180,7 +178,7 @@ const GAMES = [
     creator: "PenguinUniverseRBX",
     creatorUrl: "https://www.roblox.com/users/4329480562/profile",
     date: "Mar. 25, 2022",
-    rating: "E",
+    rating: "Minimal",
     tags: ["roleplay", "social", "casual"],
     genres: ["casual", "multiplayer"],
     content: "Suitable for everyone",
@@ -196,7 +194,7 @@ const GAMES = [
     creator: "Preston / BIG Games Pets",
     creatorUrl: "https://www.roblox.com/users/19717956/profile",
     date: "Jan. 23, 2021",
-    rating: "E",
+    rating: "Minimal",
     tags: ["simulation", "collecting", "pets"],
     genres: ["casual"],
     content: "Suitable for everyone",
@@ -212,7 +210,7 @@ const GAMES = [
     creator: "Haydebug / White Hat Studio",
     creatorUrl: "https://www.roblox.com/users/117229853/profile",
     date: "Nov. 13, 2020",
-    rating: "E",
+    rating: "Minimal",
     tags: ["party", "multiplayer", "minigames"],
     genres: ["multiplayer", "casual"],
     content: "Suitable for everyone",
@@ -228,7 +226,7 @@ const GAMES = [
     creator: "Socksfor3 / SocksGames",
     creatorUrl: "https://www.roblox.com/users/1108032657/profile",
     date: "Jan. 18, 2023",
-    rating: "E",
+    rating: "Minimal",
     tags: ["minigames", "competitive", "leaderboard"],
     genres: ["multiplayer", "casual"],
     content: "Suitable for everyone",
@@ -244,10 +242,10 @@ const GAMES = [
     creator: "Vyriss",
     creatorUrl: "https://www.roblox.com/users/80254/profile",
     date: "2015",
-    rating: "E10+",
+    rating: "Mild",
     tags: ["survival", "disasters", "multiplayer"],
     genres: ["casual", "multiplayer"],
-    content: "Violence (Mild/Occasional)",
+    content: "Violence (Mild/Repeated), Fear (Mild/Repeated)",
     desc: "Survive an escalating series of disasters alongside other players. Each round brings a new chaos-inducing event — from alien invasions to classic floods. More varied and wilder than its predecessor.",
     note: "A step up from Natural Disaster Survival in creativity and chaos. Great with a full server."
   },
@@ -260,7 +258,7 @@ const GAMES = [
     creator: "Utopia / Team of Tanorio",
     creatorUrl: "https://www.roblox.com/users/2599716912/profile",
     date: "Oct. 26, 2022",
-    rating: "E",
+    rating: "Minimal",
     tags: ["creature", "MMO", "early access"],
     genres: ["creature", "adventure"],
     content: "Suitable for everyone",
@@ -276,7 +274,7 @@ const GAMES = [
     creator: "RedMantaStudio / World // Zero",
     creatorUrl: "https://www.roblox.com/users/548860564/profile",
     date: "2019",
-    rating: "E",
+    rating: "Minimal",
     tags: ["racing", "adventure", "exploration"],
     genres: ["adventure", "casual"],
     content: "Suitable for everyone",
@@ -292,10 +290,10 @@ const GAMES = [
     creator: "RedMantaStudio / World // Zero",
     creatorUrl: "https://www.roblox.com/users/548860564/profile",
     date: "Jan. 8, 2019",
-    rating: "E10+",
+    rating: "Mild",
     tags: ["RPG", "dungeon", "co-op"],
     genres: ["adventure", "multiplayer"],
-    content: "Violence (Mild/Occasional)",
+    content: "Violence (Mild/Repeated)",
     desc: "Dungeon crawling meets RPG in beautifully designed worlds. Choose from various classes with unique skills and playstyles, team up with friends to defeat challenging bosses, and complete quests across a rich cooperative multiplayer adventure.",
     note: "Invite your friends before starting this one — the adventure is meant to be shared."
   }
