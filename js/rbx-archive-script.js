@@ -1,6 +1,6 @@
 /* ════════════════════════════════════════
    rbx-archive-script.js
-   MAIN INTERACTIVITY - Using genre-based fallback icons
+   MAIN INTERACTIVITY - With YouTube Autoplay & Horizontal Modal
 ════════════════════════════════════════ */
 
 let activeGenre = "all";
@@ -10,6 +10,43 @@ let currentPanel = "games";
 // Store favorite games in localStorage
 let favorites = JSON.parse(localStorage.getItem('rbx_favorites') || '[]');
 
+// Helper function to check if a URL is a YouTube link
+function isYouTubeUrl(url) {
+  if (!url) return false;
+  return url.includes('youtube.com/watch?v=') || 
+         url.includes('youtu.be/') ||
+         url.includes('youtube.com/embed/');
+}
+
+// Helper function to extract YouTube video ID
+function getYouTubeId(url) {
+  const patterns = [
+    /(?:youtube\.com\/watch\?v=)([^&]+)/,
+    /(?:youtu\.be\/)([^?]+)/,
+    /(?:youtube\.com\/embed\/)([^?]+)/
+  ];
+  
+  for (const pattern of patterns) {
+    const match = url.match(pattern);
+    if (match) return match[1];
+  }
+  return null;
+}
+
+// Helper function to get YouTube embed URL with autoplay
+function getYouTubeEmbedUrl(url, autoplay = true) {
+  const videoId = getYouTubeId(url);
+  if (!videoId) return null;
+  
+  return `https://www.youtube.com/embed/${videoId}?autoplay=${autoplay ? '1' : '0'}&mute=1&modestbranding=1&rel=0&playsinline=1`;
+}
+
+// Helper function to get YouTube thumbnail (for fallback)
+function getYouTubeThumbnail(url) {
+  const videoId = getYouTubeId(url);
+  return videoId ? `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg` : null;
+}
+
 // Helper function to get fallback icon based on game's primary genre
 function getFallbackIcon(game) {
   if (game.genres.includes('multiplayer')) return 'fa-users';
@@ -17,7 +54,7 @@ function getFallbackIcon(game) {
   if (game.genres.includes('horror')) return 'fa-ghost';
   if (game.genres.includes('creature')) return 'fa-dragon';
   if (game.genres.includes('casual')) return 'fa-smile';
-  return 'fa-gamepad'; // default fallback
+  return 'fa-gamepad';
 }
 
 function createGameTile(game) {
@@ -34,7 +71,7 @@ function createGameTile(game) {
   
   // Create image wrapper for fallback handling
   const imageHtml = `
-    <div class="tile-image-wrapper" style="position: relative; width: 100%; aspect-ratio: 1 / 1; background: var(--surface-overlay);">
+    <div class="tile-image-wrapper">
       <img class="tile-icon" 
            src="${game.icon}" 
            alt="${game.name} thumbnail" 
@@ -42,8 +79,8 @@ function createGameTile(game) {
            onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';"
            style="width: 100%; height: 100%; object-fit: cover;">
       <div class="tile-icon-fallback" 
-           style="display: none; width: 100%; height: 100%; align-items: center; justify-content: center; background: linear-gradient(135deg, var(--surface-raised), var(--surface-overlay)); color: var(--accent);">
-        <i class="fas ${fallbackIcon}" style="font-size: 48px;"></i>
+           style="display: none;">
+        <i class="fas ${fallbackIcon}"></i>
       </div>
     </div>
   `;
@@ -52,7 +89,7 @@ function createGameTile(game) {
     ${imageHtml}
     <span class="tile-badge">All Ages</span>
     <button class="tile-fav ${isFav ? 'fav-active' : ''}" data-id="${game.id}" aria-label="Favorite">
-      <i class="fas ${isFav ? 'fa-star' : 'fa-star'}"></i>
+      <i class="fas fa-star"></i>
     </button>
     <div class="tile-body">
       <p class="tile-name">${escapeHtml(game.name)}</p>
@@ -130,17 +167,63 @@ function openModal(game) {
   const modalDesc = document.getElementById("modalDesc");
   const modalNote = document.getElementById("modalNote");
   const modalPlayBtn = document.getElementById("modalPlayBtn");
+  const modalMediaWrapper = document.querySelector('.modal-media-wrapper');
 
-  if (modalThumb) {
+  // Clear previous content
+  removeVideoFromModal(modalMediaWrapper);
+  modalThumb.style.display = 'block';
+  modalThumb.onerror = null;
+
+  // Handle YouTube videos or regular images
+  if (isYouTubeUrl(game.thumb)) {
+    const embedUrl = getYouTubeEmbedUrl(game.thumb, true);
+    
+    if (embedUrl) {
+      modalThumb.style.display = 'none';
+      
+      const iframe = document.createElement('iframe');
+      iframe.className = 'modal-video';
+      iframe.src = embedUrl;
+      iframe.width = '100%';
+      iframe.height = '100%';
+      iframe.style.border = 'none';
+      iframe.style.display = 'block';
+      iframe.allow = 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture';
+      iframe.allowFullscreen = true;
+      
+      const playOverlay = document.createElement('div');
+      playOverlay.className = 'video-play-overlay';
+      playOverlay.innerHTML = '<i class="fas fa-volume-mute"></i> Video plays muted • Click to unmute';
+      
+      modalMediaWrapper.appendChild(iframe);
+      modalMediaWrapper.appendChild(playOverlay);
+      
+      setTimeout(() => {
+        playOverlay.style.opacity = '0';
+      }, 4000);
+    } else {
+      modalThumb.style.display = 'block';
+      modalThumb.src = getYouTubeThumbnail(game.thumb);
+      modalThumb.alt = game.name;
+    }
+  } else {
     modalThumb.src = game.thumb;
     modalThumb.alt = game.name;
-    // Add error handling for modal thumb
+    
     modalThumb.onerror = function() {
       this.style.display = 'none';
-      // Could add a fallback div here if needed
+      let fallbackDiv = modalMediaWrapper.querySelector('.modal-thumb-fallback');
+      if (!fallbackDiv) {
+        fallbackDiv = document.createElement('div');
+        fallbackDiv.className = 'modal-thumb-fallback';
+        fallbackDiv.innerHTML = `<i class="fas ${getFallbackIcon(game)}"></i><span>Preview unavailable</span>`;
+        modalMediaWrapper.appendChild(fallbackDiv);
+      } else {
+        fallbackDiv.style.display = 'flex';
+      }
     };
-    modalThumb.style.display = 'block';
   }
+  
   if (modalTitle) modalTitle.textContent = game.name;
   if (modalCreator) {
     modalCreator.innerHTML = `Created ${game.date} · by <a href="${game.creatorUrl}" target="_blank">${escapeHtml(game.creator)}</a>`;
@@ -152,13 +235,28 @@ function openModal(game) {
     modalTags.innerHTML = game.tags.map(t => `<span class="modal-tag">${escapeHtml(t)}</span>`).join("");
   }
   if (modalDesc) modalDesc.textContent = game.desc;
-  if (modalNote) modalNote.textContent = game.note;
+  if (modalNote) {
+    modalNote.innerHTML = game.note || 'No personal note available for this game yet.';
+  }
   if (modalPlayBtn) modalPlayBtn.href = game.url;
 
   if (modalBackdrop) {
     modalBackdrop.classList.add("open");
     document.body.style.overflow = "hidden";
   }
+}
+
+function removeVideoFromModal(modalMediaWrapper) {
+  if (!modalMediaWrapper) return;
+  
+  const existingIframe = modalMediaWrapper.querySelector('.modal-video');
+  if (existingIframe) existingIframe.remove();
+  
+  const existingOverlay = modalMediaWrapper.querySelector('.video-play-overlay');
+  if (existingOverlay) existingOverlay.remove();
+  
+  const fallbackDiv = modalMediaWrapper.querySelector('.modal-thumb-fallback');
+  if (fallbackDiv) fallbackDiv.remove();
 }
 
 function closeModal(event) {
@@ -169,9 +267,15 @@ function closeModal(event) {
 
 function closeModalDirect() {
   const modalBackdrop = document.getElementById("modalBackdrop");
+  const modalMediaWrapper = document.querySelector('.modal-media-wrapper');
+  
   if (modalBackdrop) {
     modalBackdrop.classList.remove("open");
     document.body.style.overflow = "";
+  }
+  
+  if (modalMediaWrapper) {
+    removeVideoFromModal(modalMediaWrapper);
   }
 }
 
@@ -183,7 +287,6 @@ function filterGenre(genre) {
 function filterGenreChip(genre, btn) {
   activeGenre = genre;
   
-  // Update active state on filter chips
   document.querySelectorAll(".filter-chip").forEach(c => c.classList.remove("active"));
   if (btn) btn.classList.add("active");
   
@@ -201,18 +304,15 @@ function handleSearch() {
 function switchPanel(panel, btn) {
   currentPanel = panel;
 
-  // Switch content panels
   document.querySelectorAll(".content-panel").forEach(p => p.classList.remove("active"));
   const targetPanel = document.getElementById(`panel-${panel}`);
   if (targetPanel) targetPanel.classList.add("active");
 
-  // Update active states for nav buttons
   document.querySelectorAll(".nav-link[data-panel], .snack-btn[data-panel]")
     .forEach(b => b.classList.remove("active"));
   document.querySelectorAll(`[data-panel="${panel}"]`)
     .forEach(b => b.classList.add("active"));
 
-  // Show/hide filter elements based on active panel
   const filterSectionLabel = document.getElementById("filterSectionLabel");
   const filterButtons = document.getElementById("filterButtons");
   const filterBar = document.getElementById("filterBar");
@@ -244,7 +344,6 @@ function toggleFav(gameId, btnElement) {
   localStorage.setItem('rbx_favorites', JSON.stringify(favorites));
 }
 
-// Helper function to escape HTML
 function escapeHtml(str) {
   if (!str) return '';
   const div = document.createElement('div');
@@ -252,7 +351,6 @@ function escapeHtml(str) {
   return div.innerHTML;
 }
 
-// Initialize sidebar toggle
 function initSidebar() {
   const sidebarToggle = document.getElementById("sidebarToggle");
   const sidebar = document.getElementById("sidebar");
@@ -264,7 +362,6 @@ function initSidebar() {
   }
 }
 
-// Initialize keyboard shortcuts
 function initKeyboardShortcuts() {
   document.addEventListener("keydown", (e) => {
     if (e.key === "Escape") {
@@ -273,22 +370,18 @@ function initKeyboardShortcuts() {
   });
 }
 
-// Initialize everything when DOM is ready
 document.addEventListener("DOMContentLoaded", () => {
   initSidebar();
   initKeyboardShortcuts();
   
-  // Set initial filter bar visibility
   const filterBar = document.getElementById("filterBar");
   if (filterBar && currentPanel === "games") {
     filterBar.style.display = "flex";
   }
   
-  // Render initial games
   renderTiles();
 });
 
-// Make functions globally available for inline onclick handlers
 window.filterGenre = filterGenre;
 window.filterGenreChip = filterGenreChip;
 window.handleSearch = handleSearch;

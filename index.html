@@ -151,30 +151,46 @@
   </main>
 </div>
 
-<!-- ═══ MODAL ═══ -->
+<!-- ═══ MODAL - Horizontal Layout ═══ -->
 <div class="modal-backdrop" id="modalBackdrop" onclick="closeModal(event)">
   <div class="modal" id="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
-    <div class="modal-wrap">
-      <img src="" alt="" class="modal-thumb" id="modalThumb">
-      <button class="modal-close" onclick="closeModalDirect()" aria-label="Close">
-        <i class="fas fa-times"></i>
-      </button>
-    </div>
-    <div class="modal-body">
-      <h2 class="modal-title" id="modalTitle"></h2>
-      <p class="modal-creator" id="modalCreator"></p>
-      <div class="modal-rating" id="modalRating"></div>
-      <div class="modal-tags" id="modalTags"></div>
-      <div class="modal-divider"></div>
-      <p class="modal-desc" id="modalDesc"></p>
-      <div class="modal-note" id="modalNote"></div>
-      <div class="modal-actions">
-        <a class="btn-play" id="modalPlayBtn" href="#" target="_blank">
-          <i class="fas fa-play"></i> Play Now
-        </a>
-        <button class="btn-ghost" onclick="closeModalDirect()">
-          <i class="fas fa-arrow-left"></i> Back
-        </button>
+
+    <!-- ✦ CLOSE BUTTON — top-right of the entire modal box -->
+    <button class="modal-close" onclick="closeModalDirect()" aria-label="Close">
+      <i class="fas fa-times"></i>
+    </button>
+
+    <div class="modal-inner">
+      <!-- LEFT SIDE: Thumbnail/Video -->
+      <div class="modal-media">
+        <div class="modal-media-wrapper">
+          <img src="" alt="" class="modal-thumb" id="modalThumb">
+        </div>
+      </div>
+      
+      <!-- RIGHT SIDE: Details -->
+      <div class="modal-details">
+        <div class="modal-body">
+          <div class="modal-content">
+            <h2 class="modal-title" id="modalTitle"></h2>
+            <p class="modal-creator" id="modalCreator"></p>
+            <div class="modal-rating" id="modalRating"></div>
+            <div class="modal-tags" id="modalTags"></div>
+            <div class="modal-divider"></div>
+            <p class="modal-desc" id="modalDesc"></p>
+            <div class="modal-note" id="modalNote"></div>
+          </div>
+          <div class="modal-bottom">
+            <div class="modal-actions">
+              <a class="btn-play" id="modalPlayBtn" href="#" target="_blank">
+                <i class="fas fa-play"></i> Play Now
+              </a>
+              <button class="btn-ghost" onclick="closeModalDirect()">
+                <i class="fas fa-arrow-left"></i> Back
+              </button>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   </div>
