@@ -101,6 +101,14 @@ function generateAboutContent() {
           `).join('')}
         </div>
         ${wikiGames.length === 0 ? '<p style="color: var(--text-dim); font-size: 13px; margin-top: 12px;">No wiki profiles added yet.</p>' : ''}
+      </div><br>
+
+      <!-- Disclaimer -->
+      <div class="about-card">
+        <h2>Disclaimer</h2>
+        <p>RBX Archive is an independent personal project created for non-commercial purposes. This site is not affiliated with, endorsed by, or sponsored by Roblox Corporation.</p>
+        <p>All game titles, descriptions, thumbnails, and related assets belong to their respective creators and developers on the Roblox platform. They are referenced here solely for identification and archival purposes.</p>
+        <p>This archive reflects personal opinions and selections only. It is not an official Roblox resource.</p>
       </div>
     </div>
   `;
