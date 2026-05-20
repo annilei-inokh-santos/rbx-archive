@@ -44,6 +44,7 @@ function generateAboutContent() {
         <h2>How to Navigate</h2>
         <p>Browse the <strong>Games</strong> tab to explore the full archive. Click any tile to open a detailed overlay with the game description, content rating, creator info, and my personal note. Use filters or search to narrow things down.</p>
         <p>⭐ <strong>Favorites:</strong> Click the star on any game tile to save it to your favorites. Access all your favorite games by clicking the "Favourites" filter.</p>
+        <p>💾 <strong>Favorites Storage:</strong> Your favorites are saved in your browser's local storage. This means they will stay saved between visits on the same browser and device, but won't sync across different browsers or devices. No account or login required!</p>
         <p>🔍 <strong>Search:</strong> Use the search bar to find games by name or tags.</p>
         <p>🏷️ <strong>Filters:</strong> Filter games by genre using the sidebar or filter chips.</p>
       </div>
