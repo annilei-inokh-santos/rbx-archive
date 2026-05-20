@@ -1,13 +1,17 @@
 /* ════════════════════════════════════════
    rbx-archive-script.js
    MAIN INTERACTIVITY - With YouTube Autoplay & Horizontal Modal
-   UPDATED: Bidirectional filter sync + Favorites integration + Fandom Wiki Links
+   UPDATED: JSON data loading + Skeleton Loading Screens + Future Firestore ready
 ════════════════════════════════════════ */
 
 let activeGenre = "all";
 let searchQuery = "";
 let currentPanel = "games";
 let favoritesUnsubscribe = null;
+let GAMES = []; // Will be populated from JSON
+let domReady = false;
+let isLoading = false;
+let skeletonTimeout = null;
 
 // Helper function to check if a URL is a YouTube link
 function isYouTubeUrl(url) {
@@ -46,6 +50,7 @@ function getYouTubeThumbnail(url) {
 
 // Helper function to get fallback icon based on game's primary genre
 function getFallbackIcon(game) {
+  if (!game || !game.genres) return 'fa-gamepad';
   if (game.genres.includes('multiplayer')) return 'fa-users';
   if (game.genres.includes('adventure'))  return 'fa-hat-wizard';
   if (game.genres.includes('horror'))     return 'fa-ghost';
@@ -57,11 +62,94 @@ function getFallbackIcon(game) {
 // Maps a game's rating string to a CSS modifier class and display label
 function getRatingBadge(rating) {
   switch ((rating || '').toLowerCase()) {
-    case 'minimal':    return { cls: 'badge-minimal',    label: 'Minimal' };
-    case 'mild':       return { cls: 'badge-mild',       label: 'Mild' };
-    case 'moderate':   return { cls: 'badge-moderate',   label: 'Moderate' };
-    case 'restricted': return { cls: 'badge-restricted', label: 'Restricted' };
-    default:           return { cls: 'badge-minimal',    label: rating || 'Minimal' };
+    case 'minimal':    return { cls: 'badge-minimal', label: 'Minimal', modalCls: 'modal-rating-minimal' };
+    case 'mild':       return { cls: 'badge-mild', label: 'Mild', modalCls: 'modal-rating-mild' };
+    case 'moderate':   return { cls: 'badge-moderate', label: 'Moderate', modalCls: 'modal-rating-moderate' };
+    case 'restricted': return { cls: 'badge-restricted', label: 'Restricted', modalCls: 'modal-rating-restricted' };
+    default:           return { cls: 'badge-minimal', label: rating || 'Minimal', modalCls: 'modal-rating-minimal' };
+  }
+}
+
+// Function to show skeleton loaders
+function showSkeletonLoaders() {
+  const grid = document.getElementById("gameGrid");
+  if (!grid) return;
+  
+  // Clear any existing timeout
+  if (skeletonTimeout) {
+    clearTimeout(skeletonTimeout);
+  }
+  
+  isLoading = true;
+  grid.classList.add('loading');
+  
+  // Clear all existing content including empty state
+  const existingContent = grid.querySelectorAll(".game-tile, .skeleton-tile, .empty-state");
+  existingContent.forEach(el => el.remove());
+  
+  // Create 12 skeleton tiles
+  for (let i = 0; i < 12; i++) {
+    const skeleton = document.createElement('div');
+    skeleton.className = 'skeleton-tile';
+    skeleton.style.animationDelay = (i * 0.05) + 's';
+    skeleton.innerHTML = `
+      <div style="position: relative;">
+        <div class="skeleton-image"></div>
+        <div class="skeleton-badge"></div>
+        <div class="skeleton-fav"></div>
+      </div>
+      <div class="skeleton-body">
+        <div class="skeleton-title"></div>
+        <div class="skeleton-meta"></div>
+      </div>
+    `;
+    grid.appendChild(skeleton);
+  }
+}
+
+// Function to hide skeleton loaders
+function hideSkeletonLoaders() {
+  const grid = document.getElementById("gameGrid");
+  if (!grid) return;
+  
+  isLoading = false;
+  grid.classList.remove('loading');
+  
+  // Remove any skeleton elements
+  const skeletons = grid.querySelectorAll('.skeleton-tile');
+  skeletons.forEach(skeleton => skeleton.remove());
+}
+
+// Load games from JSON file
+async function loadGamesFromJSON() {
+  try {
+    console.log('Loading games from JSON...');
+    showSkeletonLoaders();
+    
+    const response = await fetch('js/games.json');
+    if (!response.ok) throw new Error('Failed to load games.json');
+    const games = await response.json();
+    GAMES = games;
+    console.log(`Loaded ${GAMES.length} games from JSON`);
+    
+    window.GAMES = GAMES;
+    
+    if (domReady) {
+      hideSkeletonLoaders();
+      renderTiles();
+      if (typeof generateAboutContent === 'function') {
+        generateAboutContent();
+      }
+    }
+  } catch (error) {
+    console.error('Error loading games:', error);
+    hideSkeletonLoaders();
+    if (domReady) {
+      const grid = document.getElementById("gameGrid");
+      if (grid) {
+        grid.innerHTML = '<div class="empty-state" style="display:block;"><i class="fas fa-exclamation-triangle"></i><p>Failed to load games. Please refresh the page.</p></div>';
+      }
+    }
   }
 }
 
@@ -73,7 +161,6 @@ function setActiveGenre(genre, clickedElement) {
   const allFilterButtons = document.querySelectorAll('.nav-link[onclick*="filterGenre"], .filter-chip');
   
   allFilterButtons.forEach(btn => {
-    // Determine which genre this button represents
     let btnGenre = null;
     const onclickAttr = btn.getAttribute('onclick');
     
@@ -94,12 +181,10 @@ function setActiveGenre(genre, clickedElement) {
       else if (onclickAttr.includes("filterGenreChip('casual')")) btnGenre = 'casual';
     }
     
-    // Also check data-genre attribute for filter chips
     if (!btnGenre && btn.hasAttribute('data-genre')) {
       btnGenre = btn.getAttribute('data-genre');
     }
     
-    // Apply or remove active class
     if (btnGenre === genre) {
       btn.classList.add('active');
     } else {
@@ -107,8 +192,20 @@ function setActiveGenre(genre, clickedElement) {
     }
   });
   
-  // Re-render tiles
-  renderTiles();
+  // Re-render tiles with skeleton if games are loaded
+  if (GAMES.length && domReady) {
+    renderTilesWithDelay();
+  } else if (domReady) {
+    renderTiles();
+  }
+}
+
+// Helper function to render tiles with a small delay for skeleton to show
+function renderTilesWithDelay() {
+  showSkeletonLoaders();
+  skeletonTimeout = setTimeout(() => {
+    renderTiles();
+  }, 150);
 }
 
 // Wrapper functions that call the unified setActiveGenre
@@ -185,11 +282,27 @@ function createGameTile(game) {
 }
 
 function renderTiles() {
-  const grid  = document.getElementById("gameGrid");
-  const empty = document.getElementById("emptyState");
+  const grid = document.getElementById("gameGrid");
+  
+  if (!grid) {
+    console.error("gameGrid element not found!");
+    return;
+  }
+  
+  if (!GAMES.length) {
+    console.log("No games loaded yet, waiting...");
+    if (!isLoading) {
+      showSkeletonLoaders();
+    }
+    return;
+  }
 
-  const existingTiles = grid.querySelectorAll(".game-tile");
-  existingTiles.forEach(t => t.remove());
+  // Hide skeletons first
+  hideSkeletonLoaders();
+  
+  // Clear all content including empty state
+  const allContent = grid.querySelectorAll(".game-tile, .empty-state");
+  allContent.forEach(el => el.remove());
 
   let filtered = GAMES.filter(g => {
     const matchGenre  = activeGenre === "all" || 
@@ -203,27 +316,25 @@ function renderTiles() {
   if (visibleCount) visibleCount.textContent = filtered.length;
 
   if (filtered.length === 0) {
-    empty.style.display = "block";
-    // Customize empty state message for favorites
+    // Create empty state
+    const emptyState = document.createElement('div');
+    emptyState.id = "emptyState";
+    emptyState.className = "empty-state";
+    emptyState.style.display = "block";
+    
     if (activeGenre === "favourites") {
-      const emptyMessage = empty.querySelector('p');
-      if (emptyMessage) {
-        emptyMessage.innerHTML = '<i class="fas fa-star" style="font-size:36px;display:block;margin-bottom:12px;color:var(--text-dim);"></i>No favorited games yet.<br>Click the <i class="fas fa-star"></i> star on any game to add it to your favorites!';
-      }
+      emptyState.innerHTML = '<i class="fas fa-star" style="font-size:36px;display:block;margin-bottom:12px;color:var(--text-dim);"></i><p>No favorited games yet.<br>Click the <i class="fas fa-star"></i> star on any game to add it to your favorites!</p>';
     } else {
-      const emptyMessage = empty.querySelector('p');
-      if (emptyMessage) {
-        emptyMessage.innerHTML = 'No games match your search.';
-      }
+      emptyState.innerHTML = '<i class="fas fa-search"></i><p>No games match your search.</p>';
     }
+    grid.appendChild(emptyState);
     return;
   }
-  empty.style.display = "none";
 
   filtered.forEach((game, i) => {
     const tile = createGameTile(game);
     tile.style.animationDelay = (i * 0.04) + "s";
-    grid.insertBefore(tile, empty);
+    grid.appendChild(tile);
   });
 }
 
@@ -239,13 +350,18 @@ function openModal(game) {
   const modalPlayBtn      = document.getElementById("modalPlayBtn");
   const modalMediaWrapper = document.querySelector('.modal-media-wrapper');
 
+  if (!modalBackdrop || !modalThumb || !modalTitle) {
+    console.error("Modal elements not found");
+    return;
+  }
+
   removeVideoFromModal(modalMediaWrapper);
   modalThumb.style.display = 'block';
   modalThumb.onerror = null;
 
   if (isYouTubeUrl(game.thumb)) {
     const embedUrl = getYouTubeEmbedUrl(game.thumb, true);
-    if (embedUrl) {
+    if (embedUrl && modalMediaWrapper) {
       modalThumb.style.display = 'none';
 
       const iframe = document.createElement('iframe');
@@ -276,14 +392,16 @@ function openModal(game) {
     modalThumb.alt = game.name;
     modalThumb.onerror = function() {
       this.style.display = 'none';
-      let fallbackDiv = modalMediaWrapper.querySelector('.modal-thumb-fallback');
-      if (!fallbackDiv) {
-        fallbackDiv = document.createElement('div');
-        fallbackDiv.className = 'modal-thumb-fallback';
-        fallbackDiv.innerHTML = `<i class="fas ${getFallbackIcon(game)}"></i><span>Preview unavailable</span>`;
-        modalMediaWrapper.appendChild(fallbackDiv);
-      } else {
-        fallbackDiv.style.display = 'flex';
+      if (modalMediaWrapper) {
+        let fallbackDiv = modalMediaWrapper.querySelector('.modal-thumb-fallback');
+        if (!fallbackDiv) {
+          fallbackDiv = document.createElement('div');
+          fallbackDiv.className = 'modal-thumb-fallback';
+          fallbackDiv.innerHTML = `<i class="fas ${getFallbackIcon(game)}"></i><span>Preview unavailable</span>`;
+          modalMediaWrapper.appendChild(fallbackDiv);
+        } else {
+          fallbackDiv.style.display = 'flex';
+        }
       }
     };
   }
@@ -292,25 +410,27 @@ function openModal(game) {
   if (modalCreator) {
     modalCreator.innerHTML = `Created ${game.date} · by <a href="${game.creatorUrl}" target="_blank">${escapeHtml(game.creator)}</a>`;
   }
+  
   if (modalRating) {
-    const { label } = getRatingBadge(game.rating);
+    const { label, modalCls } = getRatingBadge(game.rating);
+    modalRating.className = 'modal-rating';
+    modalRating.classList.add(modalCls);
     modalRating.innerHTML = `<i class="fas fa-shield-alt"></i> ${label} · ${game.content}`;
   }
+  
   if (modalTags)    modalTags.innerHTML    = game.tags.map(t => `<span class="modal-tag">${escapeHtml(t)}</span>`).join("");
   if (modalDesc)    modalDesc.textContent  = game.desc;
   
-  // Update modal note to include Fandom link if it exists
   if (modalNote) {
     let noteHtml = game.note || 'No personal note available for this game yet.';
     
-    // Add Fandom wiki profile link if available
     if (game.fandomUrl) {
-      noteHtml += `<div class="modal-fandom-link" style="margin-top: 16px; padding-top: 12px; border-top: 1px solid var(--border-subtle);">
-        <i class="fab fa-wikipedia-w" style="color: var(--accent); margin-right: 8px; font-size: 18px;"></i>
-        <a href="${game.fandomUrl}" target="_blank" rel="noopener noreferrer" style="color: var(--accent); text-decoration: none; font-weight: 600;">
-          My Fandom Wiki Profile <i class="fas fa-external-link-alt" style="font-size: 11px; margin-left: 4px;"></i>
+      noteHtml += `<div class="modal-fandom-link">
+        <i class="fab fa-wikipedia-w"></i>
+        <a href="${game.fandomUrl}" target="_blank" rel="noopener noreferrer">
+          My Fandom Wiki Profile <i class="fas fa-external-link-alt"></i>
         </a>
-        <span style="color: var(--text-dim); font-size: 11px;">— Check out my wiki contributions</span>
+        <span>— Check out my wiki contributions</span>
       </div>`;
     }
     
@@ -319,10 +439,8 @@ function openModal(game) {
   
   if (modalPlayBtn) modalPlayBtn.href      = game.url;
 
-  if (modalBackdrop) {
-    modalBackdrop.classList.add("open");
-    document.body.style.overflow = "hidden";
-  }
+  modalBackdrop.classList.add("open");
+  document.body.style.overflow = "hidden";
 }
 
 function removeVideoFromModal(modalMediaWrapper) {
@@ -355,7 +473,11 @@ function handleSearch() {
   const searchInput = document.getElementById("searchInput");
   if (searchInput) {
     searchQuery = searchInput.value;
-    renderTiles();
+    if (GAMES.length && !isLoading) {
+      renderTilesWithDelay();
+    } else {
+      renderTiles();
+    }
   }
 }
 
@@ -389,7 +511,6 @@ function switchPanel(panel, btn) {
 function toggleFav(gameId, btnElement) {
   const newState = FavoritesSystem.toggle(gameId);
   
-  // Update button visual
   if (btnElement) {
     if (newState) {
       btnElement.classList.add('fav-active');
@@ -398,7 +519,6 @@ function toggleFav(gameId, btnElement) {
     }
   }
   
-  // If currently viewing favorites filter, re-render to show/hide the game
   if (activeGenre === 'favourites') {
     renderTiles();
   }
@@ -428,13 +548,11 @@ function initKeyboardShortcuts() {
 }
 
 function initFavoritesSubscription() {
-  // Subscribe to favorites changes to update UI in real-time
   if (favoritesUnsubscribe) {
     favoritesUnsubscribe();
   }
   
   favoritesUnsubscribe = FavoritesSystem.subscribe(function(action, gameId, allFavorites) {
-    // Update all favorite buttons on existing tiles if they match
     const allFavButtons = document.querySelectorAll('.tile-fav');
     allFavButtons.forEach(btn => {
       const btnGameId = btn.getAttribute('data-id');
@@ -447,25 +565,26 @@ function initFavoritesSubscription() {
       }
     });
     
-    // If we're on the favourites filter, re-render to update visibility
     if (activeGenre === 'favourites') {
       renderTiles();
     }
   });
 }
 
-document.addEventListener("DOMContentLoaded", () => {
+document.addEventListener("DOMContentLoaded", async () => {
+  console.log("DOM loaded, initializing...");
+  domReady = true;
+  
   initSidebar();
   initKeyboardShortcuts();
   initFavoritesSubscription();
   
+  await loadGamesFromJSON();
+  
   const filterBar = document.getElementById("filterBar");
   if (filterBar && currentPanel === "games") filterBar.style.display = "flex";
   
-  // Set initial active states
   setActiveGenre('all', null);
-  
-  renderTiles();
 });
 
 // Make functions available globally
